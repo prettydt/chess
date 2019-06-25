@@ -1,0 +1,117 @@
+
+- (void)addLines {
+    
+    for (int i = 0; i < 15 + 2; i ++) {
+        CALayer *hLayer = [CALayer layer];
+        hLayer.frame = CGRectMake(0, i * 300 / (15 ), 300, 0.5);
+        hLayer.backgroundColor = [NSColor blackColor].CGColor;
+        
+        CALayer *vLayer = [CALayer layer];
+        vLayer.frame = CGRectMake(i * 300 / (15 ), 0, 0.5, 300);
+        vLayer.backgroundColor = [NSColor blackColor].CGColor;
+        
+        [self.layer addSublayer:hLayer];
+        [self.layer addSublayer:vLayer];
+    }
+}
+-(void)mouseDown:(NSEvent *)event
+{
+ 
+    NSImageView *imgView = [[NSImageView alloc]init];
+    NSPoint event_location = event.locationInWindow;
+    NSPoint local_point = [self convertPoint:event_location fromView:nil];
+    self.x =local_point.x/20;
+    self.y =local_point.y/20;
+    imgView.frame = NSMakeRect( ((int)local_point.x/20)*20-5, ((int)local_point.y/20)*20-5, 10, 10);
+    imgView.imageFrameStyle = NSImageFramePhoto; //图片边框的样式
+    imgView.wantsLayer = YES;
+    imgView.layer.backgroundColor = [NSColor redColor].CGColor;
+    [self addSubview:imgView];
+}
+
+
+
+#import "ViewController.h"
+@implementation ViewController
+typedef NS_ENUM(NSInteger, OccupyType) {
+    OccupyTypeEmpty = 0, //空
+    OccupyTypeUser,      //用户
+    OccupyTypeAI,        //电脑
+    OccupyTypeEnemy,     //对手
+    OccupyTypeUnknown,   //未知
+    OccupyTypeWhite,     //白旗
+    OccupyTypeBlack,     //黑旗
+};
+static NSInteger const DHBoardSize = 15;
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    NSMutableArray *arr = [NSMutableArray new];
+    for(NSInteger i=0;i<15;i++)
+    {
+        NSMutableArray *row = [NSMutableArray new];
+        for(NSInteger x=0;x<15;x++)
+        {
+            Chesspiece *piece= [Chesspiece new];
+            piece.chessType = @"white";
+            piece.location = NSMakePoint(i, x);
+            [row addObject:piece];
+        }
+        [arr addObject:row];
+    }
+    Chesspiece *point  = [Chesspiece new];
+    point.location = NSMakePoint(2, 5);
+    point.chessType = @"white";
+    BOOL result = [self win:point theBoard:arr];
+    NSLog(@"result %hhd",result);
+    // Do any additional setup after loading the view.
+}
+
+-(BOOL)win :(Chesspiece*) mouseDownPiece theBoard:(NSMutableArray*)theBoard
+{
+    int r = mouseDownPiece.location.x;
+    int c = mouseDownPiece.location.y;
+    int count = 1;
+    //上，用x-1和x比较，如果type相等，则count+1,for 5次
+    for(int i = 0;i<5;i++)//
+    {
+        if  ((r+i+1)>14){
+            break;
+        }
+        if  ((r+i)>14){
+            break;
+        }
+        Chesspiece *thisPiece = theBoard[r+i][c];
+        Chesspiece *thatPiece = theBoard[r+i+1][c];
+        if(theBoard[r+i][c]!=0&&[thisPiece.chessType isEqualToString: thatPiece.chessType])
+        {
+            count++;
+        }else
+        {
+            break;
+        }
+    }
+    for(int i = 0;i<5;i++)//
+    {
+        if  ((r-i-1)<1){
+            break;
+        }
+        if  ((r-i)<1){
+            break;
+        }
+        Chesspiece *thisPiece = theBoard[r-i][c];
+        Chesspiece *thatPiece = theBoard[r-i-1][c];
+        if(theBoard[r-i][c]!=0&&[thisPiece.chessType isEqualToString: thatPiece.chessType])
+        {
+            count++;
+        }else
+        {
+            break;
+        }
+    }
+
+    NSLog(@"count ==%d",count);
+    if (count >= 5) {
+        return YES;
+    }
+    return NO;
+}
